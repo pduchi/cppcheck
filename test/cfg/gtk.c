@@ -679,6 +679,17 @@ void g_idle_add_takes_data_test(void)
     g_idle_add_full(200, source_func_frees_data, data_full, NULL);
 }
 
+void g_main_context_invoke_takes_data_test(void)
+{
+    // cppcheck-suppress constVariablePointer
+    gchar *data = g_strdup("data");
+    g_main_context_invoke(NULL, source_func_frees_data, data);
+
+    // cppcheck-suppress constVariablePointer
+    gchar *data_full = g_strdup("data");
+    g_main_context_invoke_full(NULL, 0, source_func_frees_data, data_full, destroy_notify_frees_data);
+}
+
 void g_timeout_add_takes_data_test(void)
 {
     // cppcheck-suppress constVariablePointer
