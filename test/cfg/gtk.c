@@ -730,3 +730,25 @@ int g_define_enum_and_flags_type_test(void) {
     return e + f;
 }
 #endif
+
+// A NULL template selects the default one.
+gint g_file_open_tmp_test(void)
+{
+    gchar *name = NULL;
+    const gint fd = g_file_open_tmp(NULL, &name, NULL);
+    g_free(name);
+    return fd;
+}
+
+// A queue can hold NULL, so NULL can be removed from it.
+void g_queue_remove_null_test(GQueue *queue)
+{
+    g_queue_push_tail(queue, NULL);
+    g_queue_remove(queue, NULL);
+    (void)g_queue_remove_all(queue, NULL);
+}
+
+GAsyncQueue *g_async_queue_ref_test(GAsyncQueue *queue)
+{
+    return g_async_queue_ref(queue);
+}
