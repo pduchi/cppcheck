@@ -730,3 +730,38 @@ int g_define_enum_and_flags_type_test(void) {
     return e + f;
 }
 #endif
+
+// g_hook_free() and g_hook_unref() release the hook (argument 2), not the hook list.
+void g_hook_free_test(GHookList *list)
+{
+    // cppcheck-suppress checkLibraryFunction
+    GHook *hook = g_hook_alloc(list);
+    // cppcheck-suppress checkLibraryFunction
+    g_hook_free(list, hook);
+}
+
+// The hook list owns an inserted hook.
+void g_hook_insert_test(GHookList *list, GHook *sibling, GHookCompareFunc compare)
+{
+    // cppcheck-suppress checkLibraryFunction
+    GHook *hook = g_hook_alloc(list);
+    g_hook_prepend(list, hook);
+
+    // cppcheck-suppress checkLibraryFunction
+    GHook *hook_before = g_hook_alloc(list);
+    g_hook_insert_before(list, sibling, hook_before);
+
+    // cppcheck-suppress checkLibraryFunction
+    GHook *hook_sorted = g_hook_alloc(list);
+    g_hook_insert_sorted(list, hook_sorted, compare);
+
+    g_hook_destroy(list, hook->hook_id);
+}
+
+void g_hook_leak_test(GHookList *list)
+{
+    // cppcheck-suppress checkLibraryFunction
+    GHook *hook = g_hook_alloc(list);
+    (void)hook;
+    // cppcheck-suppress memleak
+}
