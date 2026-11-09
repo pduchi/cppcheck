@@ -730,3 +730,61 @@ int g_define_enum_and_flags_type_test(void) {
     return e + f;
 }
 #endif
+
+// These getters return a pointer owned by their object: the caller does not free it.
+// cppcheck-suppress constParameterPointer
+gboolean g_getters_transfer_none_test(GApplication *app, GFileIcon *file_icon, GFileInfo *info, GEmblemedIcon *emblemed, GInetAddressMask *mask, GInetSocketAddress *socket_address)
+{
+    const GDBusConnection *connection = g_application_get_dbus_connection(app);
+    const GFile *file = g_file_icon_get_file(file_icon);
+    const GIcon *icon = g_file_info_get_icon(info);
+    const GIcon *symbolic_icon = g_file_info_get_symbolic_icon(info);
+    const GObject *object = g_file_info_get_attribute_object(info, "standard::icon");
+    char ** const stringv = g_file_info_get_attribute_stringv(info, "xattr::list");
+    const GList *emblems = g_emblemed_icon_get_emblems(emblemed);
+    const GInetAddress *mask_address = g_inet_address_mask_get_address(mask);
+    const GInetAddress *socket_inet_address = g_inet_socket_address_get_address(socket_address);
+    return connection && file && icon && symbolic_icon && object && stringv && emblems &&
+           mask_address && socket_inet_address;
+}
+
+void g_dir_rewind_test(const gchar *path)
+{
+    // cppcheck-suppress checkLibraryFunction
+    GDir *dir = g_dir_open(path, 0, NULL);
+    if (!dir)
+        return;
+    g_dir_rewind(dir);
+    // cppcheck-suppress checkLibraryFunction
+    g_dir_close(dir);
+}
+
+// Each allocation is freed with the function of its own type.
+gint64 g_file_info_get_deletion_date_test(GFileInfo *info)
+{
+    // cppcheck-suppress checkLibraryFunction
+    GDateTime *date = g_file_info_get_deletion_date(info);
+    if (!date)
+        return 0;
+    const gint64 t = g_date_time_to_unix(date);
+    // cppcheck-suppress checkLibraryFunction
+    g_date_time_unref(date);
+    return t;
+}
+
+void g_pollable_source_new_test(GObject *stream)
+{
+    // cppcheck-suppress checkLibraryFunction
+    GSource *source = g_pollable_source_new(stream);
+    g_source_attach(source, NULL);
+    // cppcheck-suppress checkLibraryFunction
+    g_source_unref(source);
+}
+
+void g_signal_type_cclosure_new_test(GType itype)
+{
+    // cppcheck-suppress [checkLibraryFunction, unusedAllocatedMemory]
+    GClosure *closure = g_signal_type_cclosure_new(itype, 0);
+    // cppcheck-suppress checkLibraryFunction
+    g_closure_unref(closure);
+}
