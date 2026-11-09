@@ -783,3 +783,70 @@ void g_timeout_add_takes_data_test(void)
     gchar *data_seconds_full = g_strdup("data");
     g_timeout_add_seconds_full(0, 1, source_func_frees_data, data_seconds_full, destroy_notify_frees_data);
 }
+
+static void child_watch_func_frees_data(GPid pid, gint wait_status, gpointer data)
+{
+    (void)pid;
+    (void)wait_status;
+    g_free(data);
+}
+
+// The data passed with a child watch is owned by the callback or the destroy
+// notify from then on, so it does not leak.
+void g_child_watch_add_takes_data_test(GPid pid)
+{
+    // cppcheck-suppress constVariablePointer
+    gchar *data = g_strdup("data");
+    g_child_watch_add(pid, child_watch_func_frees_data, data);
+
+    // cppcheck-suppress constVariablePointer
+    gchar *data_full = g_strdup("data");
+    g_child_watch_add_full(0, pid, child_watch_func_frees_data, data_full, destroy_notify_frees_data);
+}
+
+static gboolean io_func_frees_data(GIOChannel *channel, GIOCondition condition, gpointer data)
+{
+    (void)channel;
+    (void)condition;
+    g_free(data);
+    return FALSE;
+}
+
+// cppcheck-suppress constParameterPointer
+void g_io_add_watch_takes_data_test(GIOChannel *channel)
+{
+    // cppcheck-suppress constVariablePointer
+    gchar *data = g_strdup("data");
+    g_io_add_watch(channel, G_IO_IN, io_func_frees_data, data);
+
+    // cppcheck-suppress constVariablePointer
+    gchar *data_full = g_strdup("data");
+    g_io_add_watch_full(channel, 0, G_IO_IN, io_func_frees_data, data_full, destroy_notify_frees_data);
+}
+
+// cppcheck-suppress constParameterPointer
+void g_source_set_callback_takes_data_test(GSource *source)
+{
+    // cppcheck-suppress constVariablePointer
+    gchar *data = g_strdup("data");
+    g_source_set_callback(source, source_func_frees_data, data, destroy_notify_frees_data);
+}
+
+static const gchar *translate_func(const gchar *str, gpointer data)
+{
+    (void)data;
+    return str;
+}
+
+// The translate data is freed with the destroy notify.
+// cppcheck-suppress constParameterPointer
+void g_option_set_translate_func_takes_data_test(GOptionContext *context, GOptionGroup *group)
+{
+    // cppcheck-suppress constVariablePointer
+    gchar *context_data = g_strdup("data");
+    g_option_context_set_translate_func(context, translate_func, context_data, destroy_notify_frees_data);
+
+    // cppcheck-suppress constVariablePointer
+    gchar *group_data = g_strdup("data");
+    g_option_group_set_translate_func(group, translate_func, group_data, destroy_notify_frees_data);
+}
