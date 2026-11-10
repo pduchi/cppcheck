@@ -339,6 +339,8 @@ void CheckNullPointerImpl::nullConstantDereference()
             tok = scope->function->token; // Check initialization list
 
         for (; tok != scope->bodyEnd; tok = tok->next()) {
+            tok = skipUnreachableBranch(tok);
+
             if (isUnevaluated(tok))
                 tok = tok->linkAt(1);
 
@@ -361,7 +363,7 @@ void CheckNullPointerImpl::nullConstantDereference()
 
                     // is one of the var items a NULL pointer?
                     for (const Token *vartok : var) {
-                        if (vartok->hasKnownIntValue() && vartok->getKnownIntValue() == 0)
+                        if (vartok->hasKnownIntValue() && vartok->getKnownIntValue() == 0 && !isUnreachableOperand(vartok))
                             nullPointerError(vartok);
                     }
                 }

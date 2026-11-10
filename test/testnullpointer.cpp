@@ -3979,6 +3979,35 @@ private:
                "}\n");
         ASSERT_EQUALS("", errout_str());
 
+        check ("void f() {\n" // NULL constant passed in a branch that is never taken
+               "    if (0)\n"
+               "        (void)strlen(0);\n"
+               "    if (0 != 0)\n"
+               "        (void)strlen(NULL);\n"
+               "    if (1)\n"
+               "        ;\n"
+               "    else\n"
+               "        (void)strlen(0);\n"
+               "}\n");
+        ASSERT_EQUALS("", errout_str());
+
+        check ("int f() {\n"
+               "    return 0 ? (int)strlen(0) : 1;\n"
+               "}\n");
+        ASSERT_EQUALS("", errout_str());
+
+        check ("void f(char** list) {\n" // GLib's g_clear_list(&list, NULL) expands to this
+               "    char* l = *list;\n"
+               "    if (l) {\n"
+               "        *list = NULL;\n"
+               "        if ((NULL) != NULL)\n"
+               "            (void)strlen((NULL));\n"
+               "        else\n"
+               "            free(l);\n"
+               "    }\n"
+               "}\n");
+        ASSERT_EQUALS("", errout_str());
+
         check ("struct S {\n" // #13220
                "    explicit S(int* p) : i(*p) {\n"
                "        if (p) {}\n"
